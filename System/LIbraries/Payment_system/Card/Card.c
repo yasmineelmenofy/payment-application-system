@@ -17,8 +17,7 @@
 EN_cardError_t getCardHolderName(ST_cardData_t *cardData)
 {
     printf("Enter The Name of Cardholder please : \n");
-    fgets((char*)cardData->cardHolderName, sizeof(cardData->cardHolderName), stdin);///////////problem here!!!!!!!!!!!! the name more than 24 is allowed to be entered by the user
-//instead of scanf fgets to allow the spaces between name
+    fgets((char*)cardData->cardHolderName, sizeof(cardData->cardHolderName), stdin);
     int nameLength = strlen((char*)cardData->cardHolderName);
     if (nameLength > 0 && cardData->cardHolderName[nameLength - 1] == '\n') {
     cardData->cardHolderName[nameLength - 1] = '\0';
@@ -31,14 +30,12 @@ EN_cardError_t getCardHolderName(ST_cardData_t *cardData)
     {
         return CARD_OK;
     }
-
 }
 
 void getCardHolderNameTest(void) {
     ST_cardData_t cardData;
     EN_cardError_t result;
 
-    // Test Case 1: Valid name
     strcpy((char*)cardData.cardHolderName, "John Doe");
     result = getCardHolderName(&cardData);
     printf("Tester Name: Your Name\n");
@@ -75,18 +72,15 @@ EN_cardError_t getCardExpiryDate(ST_cardData_t *cardData) {
 
     int DateLength = strlen((char*)cardData->cardExpirationDate);
 
-    // Remove newline character
     if (DateLength > 0 && cardData->cardExpirationDate[DateLength - 1] == '\n') {
         cardData->cardExpirationDate[DateLength - 1] = '\0';
         DateLength--;
     }
 
-    // Check if the length is exactly 5 characters
     if (DateLength != EXPIRY_DATE_LENGTH) {
         return WRONG_EXP_DATE;
     }
 
-    // Check for the correct format "MM/YY"
     if (cardData->cardExpirationDate[2] != '/' ||
         !isdigit(cardData->cardExpirationDate[0]) ||
         !isdigit(cardData->cardExpirationDate[1]) ||
@@ -94,10 +88,15 @@ EN_cardError_t getCardExpiryDate(ST_cardData_t *cardData) {
         !isdigit(cardData->cardExpirationDate[4])) {
         return WRONG_EXP_DATE;
     }
+    int month = (cardData->cardExpirationDate[0] - '0') * 10 + (cardData->cardExpirationDate[1] - '0');
+    int year = (cardData->cardExpirationDate[3] - '0') * 10 + (cardData->cardExpirationDate[4] - '0');
+
+    if (month < 1 || month > 12) {
+        return WRONG_EXP_DATE;
+    }
 
     return CARD_OK;
 }
-
 
 void getCardExpiryDateTest(void) {
     ST_cardData_t cardData;

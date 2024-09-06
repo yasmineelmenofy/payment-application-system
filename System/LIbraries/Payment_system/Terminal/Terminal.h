@@ -1,14 +1,13 @@
 #ifndef TERMINAL_H_INCLUDED
 #define TERMINAL_H_INCLUDED
 
-#include <stdio.h>
-#include <stdlib.h>
+
 #include <stdint.h>
 
 #include "Card.h"
 
 #define TRANSACATION_DATE_LENGTH 10
-#define MAXAMOUNT 10000
+
 
 
 typedef struct ST_terminalData_t

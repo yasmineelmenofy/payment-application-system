@@ -3,7 +3,11 @@
 
 #include "Terminal.h"
 
-
+/*
+ * Prompts the user to enter the transaction date in the format DD/MM/YYYY.
+ * Validates the date format and checks for logical correctness (e.g., day and month ranges).
+ * Returns TERMINAL_OK if the date is valid; otherwise, returns WRONG_DATE.
+ */
 EN_terminalError_t getTransactionDate(ST_terminalData_t *termData)
 {
     printf("Enter the Transaction Date (DD/MM/YYYY) please:\n");
@@ -11,7 +15,6 @@ EN_terminalError_t getTransactionDate(ST_terminalData_t *termData)
 
     int TdateLength = strlen((char*)termData->transactionDate);
 
-    // Remove newline character
     if (TdateLength > 0 && termData->transactionDate[TdateLength - 1] == '\n') {
         termData->transactionDate[TdateLength - 1] = '\0';
         TdateLength--;
@@ -21,7 +24,6 @@ EN_terminalError_t getTransactionDate(ST_terminalData_t *termData)
         return WRONG_DATE;
     }
 
-    // Check format "DD/MM/YYYY"
     if (termData->transactionDate[2] != '/' || termData->transactionDate[5] != '/' ||
         !isdigit(termData->transactionDate[0]) || !isdigit(termData->transactionDate[1]) ||
         !isdigit(termData->transactionDate[3]) || !isdigit(termData->transactionDate[4]) ||
@@ -54,51 +56,58 @@ EN_terminalError_t getTransactionDate(ST_terminalData_t *termData)
     return TERMINAL_OK;
 }
 
+/*
+ * Checks if the card is expired based on the transaction date and the card's expiration date.
+ * Returns TERMINAL_OK if the card is not expired; otherwise, returns EXPIRED_CARD.
+ */
 
 EN_terminalError_t isCardExpired(ST_cardData_t *cardData, ST_terminalData_t *termData) {
-    // Parse the transaction date
     int day1 = (termData->transactionDate[0] - '0') * 10 + (termData->transactionDate[1] - '0');
     int month1 = (termData->transactionDate[3] - '0') * 10 + (termData->transactionDate[4] - '0');
-
-    // Parse the card expiration date
     int day2 = (cardData->cardExpirationDate[0] - '0') * 10 + (cardData->cardExpirationDate[1] - '0');
     int month2 = (cardData->cardExpirationDate[3] - '0') * 10 + (cardData->cardExpirationDate[4] - '0');
-
-    // Compare months first
     if (month1 < month2) {
-        return TERMINAL_OK; // Card is not expired
+        return TERMINAL_OK;
     } else if (month1 > month2) {
-        return EXPIRED_CARD; // Card is expired
-    } else { // Months are equal, compare days
+        return EXPIRED_CARD;
+    } else {
         if (day1 > day2) {
-            return EXPIRED_CARD; // Card is expired
+            return EXPIRED_CARD;
         } else {
-            return TERMINAL_OK; // Card is not expired
+            return TERMINAL_OK;
         }
     }
 }
 
-
+/*
+ * Prompts the user to enter the transaction amount and validates the input.
+ * Returns TERMINAL_OK if the amount is valid; otherwise, returns INVALID_AMOUNT.
+ */
 EN_terminalError_t getTransactionAmount(ST_terminalData_t *termData) {
     printf("Enter the Amount of Transaction Please:\n");
 
-    // Check if scanf successfully reads a float
+
     if (scanf("%f", &termData->transAmount) != 1 || termData->transAmount <= 0) {
-        return INVALID_AMOUNT;  // Return error for invalid amount
+        return INVALID_AMOUNT;
     }
 
-    return TERMINAL_OK;  // Return success if amount is valid
+    return TERMINAL_OK;
 }
 
-
+/*
+ * Checks if the transaction amount exceeds the maximum allowed amount.
+ * Returns TERMINAL_OK if the amount is within the limit; otherwise, returns EXCEED_MAX_AMOUNT.
+ */
 EN_terminalError_t isBelowMaxAmount(ST_terminalData_t *termData) {
-    // Compare transaction amount with max allowed amount
     if (termData->transAmount > termData->maxTransAmount) {
-        return EXCEED_MAX_AMOUNT;  // Return error if exceeded
+        return EXCEED_MAX_AMOUNT;
     }
-    return TERMINAL_OK;  // Return success if within limit
+    return TERMINAL_OK;
 }
-
+/*
+ * Sets the maximum transaction amount for the terminal.
+ * Returns TERMINAL_OK if the maximum amount is set successfully; otherwise, returns INVALID_MAX_AMOUNT.
+ */
 EN_terminalError_t setMaxAmount(ST_terminalData_t *termData, float maxAmount) {
     if (maxAmount <= 0) {
         return INVALID_MAX_AMOUNT;
@@ -108,13 +117,17 @@ EN_terminalError_t setMaxAmount(ST_terminalData_t *termData, float maxAmount) {
     return TERMINAL_OK;
 }
 
+
+/*
+ * Validates the card's Primary Account Number (PAN) using the Luhn algorithm.
+ * Returns TERMINAL_OK if the PAN is valid; otherwise, returns INVALID_CARD.
+ */
 EN_terminalError_t isValidCardPAN(ST_cardData_t *cardData)
 {
     int len = strlen(cardData->primaryAccountNumber);
     int sum = 0;
     int doubleDigit = 0;
 
-    // Iterate over the card number digits in reverse
     for (int i = len - 1; i >= 0; i--) {
         int digit = cardData->primaryAccountNumber[i] - '0';
 

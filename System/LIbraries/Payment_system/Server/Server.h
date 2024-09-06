@@ -5,7 +5,7 @@
 #include "List.h"
 #include "queue.h"
 #include "stack.h"
-// Include your list module header
+
 
 List accountList;
 List transactionList;
@@ -28,6 +28,7 @@ float balance;
 EN_accountState_t state;
 uint8_t primaryAccountNumber[20];
 }ST_accountsDB_t;
+
 
 EN_transState_t receiveTransactionData(ST_transaction *transData);
 EN_serverError_t isValidAccount(ST_cardData_t *cardData, ST_accountsDB_t*
