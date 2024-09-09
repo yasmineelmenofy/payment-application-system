@@ -1,11 +1,16 @@
 #ifndef SERVER_H_INCLUDED
 #define SERVER_H_INCLUDED
-
 #include "File handling.h"
 #include "List.h"
-#include "queue.h"
-#include "stack.h"
 
+/*
+ * FILE: server.h
+ * AUTHOR: Yasmine Elmenofy
+ * BRIEF: This is the header file of terminal module
+ * it includes the data structure of transactions and account database
+ *it includes the prototypes of the used functions
+ * DATA: 27/08/2024
+ */
 
 List accountList;
 List transactionList;

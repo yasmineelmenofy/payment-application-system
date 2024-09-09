@@ -1,7 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "Terminal.h"
+
+
+/*
+ * FILE: terminal.c
+ * AUTHOR: Yasmine Elmenofy
+ * This module handles terminal-related functionalities in the payment system,
+ * including checking the card's expiry date, verifying transaction amounts
+ * against set limits, and processing user interactions with the payment terminal.
+ * It ensures that all necessary checks are performed before authorizing a transaction.
+ *Date:25/08/2024
+ *
+
 
 /*
  * Prompts the user to enter the transaction date in the format DD/MM/YYYY.

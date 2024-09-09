@@ -4,11 +4,17 @@
 #include <stdint.h>
 #include "Card.h"
 #include "Terminal.h"
-
-
-
 #define MAX_RECORDS 100
 
+
+/*
+ * FILE: Filehandling.h
+ * AUTHOR: Yasmine Elmenofy
+ * This is the header file of File handling module
+ *contains the structures that carry account record and transaction record
+ *contains also the prototypes of the used function in the module
+ *Date :31/08/2024
+ */
 
 
 typedef enum EN_accountState_t
@@ -48,7 +54,6 @@ typedef union RecordData {
 
 void DFF_vInsertNewAccount(const char *filename_account, RecordData *new_record);
 int DFF_iReadAccountInformationIntoList(const char *filename_account);
-void DFF_insertnewtransactiontofile(const char *filename_transaction, RecordData *new_record);
 int DFF_iReadTransactionInformationIntoList(const char *filename_transaction);
 void updateAccountBalance(const char *filename, AccountRecord_t *account);
 void DFF_vEditAccountRecords(const char *filename_account);

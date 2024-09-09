@@ -143,7 +143,17 @@ EN_serverError_t saveTransaction(ST_transaction *transData) {
             transData->cardHolderData.cardExpirationDate);
 
     fclose(file);
+   RecordData new_record;
+    new_record.transactionRecord.cardHolderData = transData->cardHolderData; // Copy cardholder data
+    new_record.transactionRecord.terminalData = transData->terminalData; // Copy terminal data
+    new_record.transactionRecord.transactionSequenceNumber = transData->transactionSequenceNumber; // Set transaction sequence number
+    new_record.transactionRecord.transactionState = transData->transState; // Set transaction state
 
+    // Insert the new record into the list
+    if (insertList(transactionList.size, new_record, &transactionList) == -1) {
+        printf("Error inserting record into the list.\n");
+        return ;
+    }
     printf("Transaction saved successfully.\n");
 
     return SERVER_OK;
@@ -151,31 +161,42 @@ EN_serverError_t saveTransaction(ST_transaction *transData) {
 
 
 /*
- * Displays the transaction history from the saved transactions list.
+ * Displays the transaction history from the saved transactions list according to the Entered PAN by the user .
  * If no transactions are found, it notifies the user accordingly.
  */
 
 void listSavedTransactions(void)
 {
+    char pan[20];
+    printf("Enter the PAN to view transaction history: ");
+    scanf("%19s", pan);
+    clearInputBuffer();
+
     if (isEmptyList(&transactionList)) {
         printf("No transaction history available.\n");
         return;
     }
 
     listnode *current = transactionList.head;
-    while (current != NULL)
-    {
-        printf("Transaction Sequence Number: %u\n", current->entry.transactionRecord.transactionSequenceNumber);
-        printf("Transaction Date: %s\n", current->entry.transactionRecord.terminalData.transactionDate);
-        printf("Transaction Amount: %.2f\n", current->entry.transactionRecord.terminalData.transAmount);
-        printf("Transaction State: %d\n", current->entry.transactionRecord.transactionState);
-        printf("Terminal Max Amount: %.2f\n", current->entry.transactionRecord.terminalData.maxTransAmount);
-       printf("Cardholder Name: %s\n", current->entry.transactionRecord.cardHolderData.cardHolderName);
-    printf("PAN: %s\n", current->entry.transactionRecord.cardHolderData.primaryAccountNumber);
-      printf("Card Expiration Date: %s\n", current->entry.transactionRecord.cardHolderData.cardExpirationDate);
-
-
+    int found = 0;
+    while (current != NULL) {
+        if (strcmp(current->entry.transactionRecord.cardHolderData.primaryAccountNumber, pan) == 0) {
+            found = 1;
+            printf("Transaction Sequence Number: %u\n", current->entry.transactionRecord.transactionSequenceNumber);
+            printf("Transaction Date: %s\n", current->entry.transactionRecord.terminalData.transactionDate);
+            printf("Transaction Amount: %.2f\n", current->entry.transactionRecord.terminalData.transAmount);
+            printf("Transaction State: %d\n", current->entry.transactionRecord.transactionState);
+            printf("Terminal Max Amount: %.2f\n", current->entry.transactionRecord.terminalData.maxTransAmount);
+            printf("Cardholder Name: %s\n", current->entry.transactionRecord.cardHolderData.cardHolderName);
+            printf("PAN: %s\n", current->entry.transactionRecord.cardHolderData.primaryAccountNumber);
+            printf("Card Expiration Date: %s\n", current->entry.transactionRecord.cardHolderData.cardExpirationDate);
+            printf("-----------------------------\n");
+        }
         current = current->next;
+    }
+
+    if (!found) {
+        printf("No transactions found for PAN %s.\n", pan);
     }
 }
 

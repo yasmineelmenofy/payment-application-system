@@ -3,7 +3,6 @@
 #include "File handling.h"
 #include "List.h"
 
-
 /*
  * FILE: File handling.c
  * AUTHOR: Yasmine Elmenofy
@@ -17,7 +16,7 @@ extern List transactionList;
 
 /*
 * Use this function to add new accounts to both file and the account list  .
-* it open the file then add the fields information in the fileds
+* it open the file then add the  information in the fields
 */
 
 void DFF_vInsertNewAccount(const char *filename_account, RecordData *new_record) {
@@ -45,7 +44,6 @@ void DFF_vInsertNewAccount(const char *filename_account, RecordData *new_record)
 }
 /*
  *  Reads account information from a file and inserts it into a list.
- *
  * This function opens the specified file containing account information,
  * reads each record, and inserts it into a global list. It handles errors
  * related to file opening and record insertion.
@@ -82,27 +80,6 @@ int DFF_iReadAccountInformationIntoList(const char *filename_account) {
     printf("Number of accounts read: %d\n", count);
     return count;
 }
-/*
-*This functions insert transaction information into  file and insterts it into a list
-*/
-void DFF_insertnewtransactiontofile(const char *filename_transaction, RecordData *new_record) {
-    FILE *file = fopen(filename_transaction, "a");
-    if (file != NULL) {
-        fprintf(file, "%u,%s,%.2f,%d,%.2f,%s,%s,%s\n",
-                new_record->transactionRecord.transactionSequenceNumber,
-                new_record->transactionRecord.terminalData.transactionDate, // Transaction Date
-                new_record->transactionRecord.terminalData.transAmount,     // Transaction Amount
-                new_record->transactionRecord.transactionState,             // Transaction State
-                new_record->transactionRecord.terminalData.maxTransAmount,  // Terminal Max Amount
-                new_record->transactionRecord.cardHolderData.cardHolderName, // Cardholder Name
-                new_record->transactionRecord.cardHolderData.primaryAccountNumber, // PAN
-                new_record->transactionRecord.cardHolderData.cardExpirationDate); // Card Expiration Date
-
-        fclose(file);
-    } else {
-        printf("Error: Unable to open transaction information file %s\n", filename_transaction);
-    }
-}
 
 
 /*
@@ -116,13 +93,12 @@ int DFF_iReadTransactionInformationIntoList(const char *filename_transaction) {
         return -1;
     }
 
-    initList(&transactionList);
     ST_transactionRecord_t temp_record;
     RecordData recordData;
     char line[256];
 
     while (fgets(line, sizeof(line), file)) {
-        int result = sscanf(line, "%u,%10s,%f,%d,%f,%255[^,],%19s,%10s",
+        int result = sscanf(line, "%u,%10[^,],%f,%d,%f,%255[^,],%19[^,],%10[^\n]",
                             &temp_record.transactionSequenceNumber,
                             temp_record.terminalData.transactionDate,
                             &temp_record.terminalData.transAmount,
@@ -132,11 +108,17 @@ int DFF_iReadTransactionInformationIntoList(const char *filename_transaction) {
                             temp_record.cardHolderData.primaryAccountNumber,
                             temp_record.cardHolderData.cardExpirationDate);
 
-
+        // Check if all expected values are read
         if (result == 8) {
             recordData.transactionRecord = temp_record;
 
-            insertList(transactionList.size, recordData, &transactionList);
+            if (insertList(transactionList.size, recordData, &transactionList) == -1) {
+                printf("Error inserting record into the transaction list.\n");
+                fclose(file);
+                return -1;
+            }
+        } else {
+            printf("Error: Line did not match expected format: %s\n", line);
         }
     }
 
@@ -200,64 +182,12 @@ void updateAccountBalance(const char *filename, AccountRecord_t *account) {
         remove("temp_accounts.txt");
     }
 }
-
 /*
- * Allows editing of account information based on the PAN entered by the user.
- * Updates both the linked list and the account file with new values.
- */
-void DFF_vEditAccountRecords(const char *filename_account) {
-    char targetPAN[20];
-    printf("Enter the PAN of the account you want to edit: ");
-    scanf("%19s", targetPAN);
-    listnode *current = accountList.head;
-    AccountRecord_t *foundAccount = NULL;
+*This function updates the account information in the file by first copying all the existing records
+* to a temporary file, replacing the record with the matching PAN with the updated information.
+*/
 
-    while (current != NULL) {
-        if (strcmp(current->entry.accountRecord.primaryAccountNumber, targetPAN) == 0) {
-            foundAccount = &current->entry.accountRecord;
-            break;
-        }
-        current = current->next;
-    }
-
-    if (foundAccount == NULL) {
-        printf("No account found with the provided PAN.\n");
-        return;
-    }
-    printf("Current Information:\n");
-    printf("Balance: %.2f\n", foundAccount->balance);
-    printf("State: %d\n", foundAccount->state);
-    printf("Name: %s\n", foundAccount->accountHolderName);
-    printf("Expiry Date: %s\n", foundAccount->expiryDate);
-    printf("Enter new information (leave unchanged fields empty):\n");
-
-    char newBalance[10], newState[5], newName[25], newExpiryDate[6];
-clearInputBuffer();
-    printf("New Balance (current %.2f): ", foundAccount->balance);
-    float newBalanceValue;
-    int balanceChanged = scanf("%f", &newBalanceValue);
-    if (balanceChanged == 1) {
-        foundAccount->balance = newBalanceValue;
-    }
-
-    printf("New State (current %d): ", foundAccount->state);
-    scanf("%s", newState);
-    if (strlen(newState) > 0) {
-        foundAccount->state = atoi(newState);
-    }
-
-    printf("New Name (current %s): ", foundAccount->accountHolderName);
-    scanf(" %24[^\n]", newName);
-    if (strlen(newName) > 0) {
-        strncpy(foundAccount->accountHolderName, newName, sizeof(foundAccount->accountHolderName));
-    }
-
-    printf("New Expiry Date (current %s): ", foundAccount->expiryDate);
-    scanf("%5s", newExpiryDate);
-    if (strlen(newExpiryDate) > 0) {
-        strncpy(foundAccount->expiryDate, newExpiryDate, sizeof(foundAccount->expiryDate));
-    }
-
+void DFF_vupdateAccountFile(const char* filename_account, AccountRecord_t* foundAccount, const char* targetPAN) {
     FILE *file = fopen(filename_account, "r");
     FILE *tempFile = fopen("temp_accounts.txt", "w");
 
@@ -281,7 +211,6 @@ clearInputBuffer();
                     foundAccount->accountHolderName,
                     foundAccount->expiryDate);
         } else {
-
             fprintf(tempFile, "%.2f,%d,%s,%s,%s\n",
                     temp_record.balance,
                     temp_record.state,
