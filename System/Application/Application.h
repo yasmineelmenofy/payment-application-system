@@ -5,6 +5,7 @@
 #include "server.h"
 #include "File handling.h"
 #include "List.h"
+#include "stack.h"
 
 
 /*

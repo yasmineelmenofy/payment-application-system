@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Server.h"
+#include "stack.h"
 
 /*
  * FILE: server.c
@@ -57,8 +58,7 @@ EN_transState_t receiveTransactionData(ST_transaction *transData) {
     while (current != NULL) {
         if (strcmp(current->entry.accountRecord.primaryAccountNumber, transData->cardHolderData.primaryAccountNumber) == 0) {
             current->entry.accountRecord.balance -= transData->terminalData.transAmount;
-            printf("Updated balance for PAN: %s, New Balance: %.2f\n",
-                   current->entry.accountRecord.primaryAccountNumber, current->entry.accountRecord.balance);
+
              updateAccountBalance("accounts.txt", &current->entry.accountRecord);
             break;
         }
@@ -77,9 +77,6 @@ EN_serverError_t isValidAccount(ST_cardData_t *cardData, ST_accountsDB_t* accoun
     listnode *current = accountList.head;
 
     while (current != NULL) {
-        printf("Checking account: %s against card PAN: %s\n",
-               current->entry.accountRecord.primaryAccountNumber,
-               cardData->primaryAccountNumber);
         if (strcmp(current->entry.accountRecord.primaryAccountNumber, cardData->primaryAccountNumber) == 0) {
             accountReference->balance = current->entry.accountRecord.balance;
             accountReference->state = current->entry.accountRecord.state;
@@ -177,29 +174,37 @@ void listSavedTransactions(void)
         return;
     }
 
+    Stack transactionStack;
+    createStack(&transactionStack);
     listnode *current = transactionList.head;
     int found = 0;
+
     while (current != NULL) {
         if (strcmp(current->entry.transactionRecord.cardHolderData.primaryAccountNumber, pan) == 0) {
             found = 1;
-            printf("Transaction Sequence Number: %u\n", current->entry.transactionRecord.transactionSequenceNumber);
-            printf("Transaction Date: %s\n", current->entry.transactionRecord.terminalData.transactionDate);
-            printf("Transaction Amount: %.2f\n", current->entry.transactionRecord.terminalData.transAmount);
-            printf("Transaction State: %d\n", current->entry.transactionRecord.transactionState);
-            printf("Terminal Max Amount: %.2f\n", current->entry.transactionRecord.terminalData.maxTransAmount);
-            printf("Cardholder Name: %s\n", current->entry.transactionRecord.cardHolderData.cardHolderName);
-            printf("PAN: %s\n", current->entry.transactionRecord.cardHolderData.primaryAccountNumber);
-            printf("Card Expiration Date: %s\n", current->entry.transactionRecord.cardHolderData.cardExpirationDate);
-            printf("-----------------------------\n");
+            push(current, &transactionStack); // Push transaction node onto stack
         }
         current = current->next;
     }
 
     if (!found) {
         printf("No transactions found for PAN %s.\n", pan);
+        return;
+    }
+
+    while (!isStackEmpty(&transactionStack)) {
+        listnode *transaction = pop(&transactionStack);
+        printf("Transaction Sequence Number: %u\n", transaction->entry.transactionRecord.transactionSequenceNumber);
+        printf("Transaction Date: %s\n", transaction->entry.transactionRecord.terminalData.transactionDate);
+        printf("Transaction Amount: %.2f\n", transaction->entry.transactionRecord.terminalData.transAmount);
+        printf("Transaction State: %d\n", transaction->entry.transactionRecord.transactionState);
+        printf("Terminal Max Amount: %.2f\n", transaction->entry.transactionRecord.terminalData.maxTransAmount);
+        printf("Cardholder Name: %s\n", transaction->entry.transactionRecord.cardHolderData.cardHolderName);
+        printf("PAN: %s\n", transaction->entry.transactionRecord.cardHolderData.primaryAccountNumber);
+        printf("Card Expiration Date: %s\n", transaction->entry.transactionRecord.cardHolderData.cardExpirationDate);
+        printf("-----------------------------\n");
     }
 }
-
 
 
 

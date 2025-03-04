@@ -43,6 +43,6 @@ EXCEED_MAX_AMOUNT, INVALID_MAX_AMOUNT,TERMINAL_ERROR
 EN_cardError_t getCardHolderName(ST_cardData_t *cardData);
 EN_cardError_t getCardExpiryDate(ST_cardData_t *cardData);
 EN_cardError_t getCardPAN(ST_cardData_t *cardData);
-
+EN_cardError_t processCardDetails(ST_cardData_t *cardData);
 
 #endif // CARD_H_INCLUDED

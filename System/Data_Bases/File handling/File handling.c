@@ -98,7 +98,7 @@ int DFF_iReadTransactionInformationIntoList(const char *filename_transaction) {
     char line[256];
 
     while (fgets(line, sizeof(line), file)) {
-        int result = sscanf(line, "%u,%10[^,],%f,%d,%f,%255[^,],%19[^,],%10[^\n]",
+        int result = sscanf(line, "%u,%10[^,],%f,%d,%f,%25[^,],%19[^,],%10[^\n]",
                             &temp_record.transactionSequenceNumber,
                             temp_record.terminalData.transactionDate,
                             &temp_record.terminalData.transAmount,
@@ -256,3 +256,5 @@ void printAccountList(void) {
 
     printf("-----------------------------------------------------\n");
 }
+
+

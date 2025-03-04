@@ -1,6 +1,7 @@
 #include "stdio.h"
 #include "Application.h"
 
+
 /*
  * FILE: application.c
  * AUTHOR: Yasmine Elmenofy
@@ -79,20 +80,33 @@ void addNewAccount( ) {
 *(No: Declined insufficient funds → Yes) → Update account balance → Save transaction → End.
 */
 void makePayment(void) {
-    EN_cardError_t cardStatus;
     ST_cardData_t cardData;
     ST_terminalData_t termData;
     EN_terminalError_t termStatus;
 
-   cardStatus = processCardDetails(&cardData);
-    if (cardStatus != CARD_OK) {
+    uint8_t pan[20];
+    printf("Enter your PAN: ");
+    scanf("%19s", pan);
+    clearInputBuffer();
+
+    listnode *current = accountList.head;
+    while (current != NULL) {
+        if (strcmp((char *)current->entry.accountRecord.primaryAccountNumber, (char *)pan) == 0) {
+            strcpy((char *)cardData.primaryAccountNumber, (char *)current->entry.accountRecord.primaryAccountNumber);
+            strcpy((char *)cardData.cardHolderName, (char *)current->entry.accountRecord.accountHolderName);
+            strcpy((char *)cardData.cardExpirationDate, (char *)current->entry.accountRecord.expiryDate);
+            break;
+        }
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        printf("Transaction declined: PAN not found.\n");
         return;
     }
-    clearInputBuffer();
     termStatus = getTransactionDate(&termData);
     if (termStatus != TERMINAL_OK) {
         printf("Invalid transaction date.\n");
-        clearInputBuffer();
         return;
     }
 
@@ -102,14 +116,11 @@ void makePayment(void) {
         return;
     }
 
-    clearInputBuffer();
     termStatus = getTransactionAmount(&termData);
     if (termStatus != TERMINAL_OK) {
         printf("Invalid transaction amount.\n");
         return;
     }
-
-    clearInputBuffer();
     termStatus = setMaxAmount(&termData, 900.00);
     if (termStatus != TERMINAL_OK) {
         printf("Invalid max transaction amount.\n");
@@ -122,7 +133,6 @@ void makePayment(void) {
         return;
     }
 
-    clearInputBuffer();
     ST_transaction transData = {0};
     transData.cardHolderData = cardData;
     transData.terminalData = termData;
@@ -132,18 +142,7 @@ void makePayment(void) {
     if (transStatus == APPROVED) {
         printf("Payment successful!\n");
 
-        listnode *current = accountList.head;
-        while (current != NULL) {
-            if (strcmp(current->entry.accountRecord.primaryAccountNumber,
-                       transData.cardHolderData.primaryAccountNumber) == 0) {
-                current->entry.accountRecord.balance -= transData.terminalData.transAmount;
-                printf("Updated balance for PAN: %s, New Balance: %.2f\n",
-                       current->entry.accountRecord.primaryAccountNumber, current->entry.accountRecord.balance);
-                break;
-            }
-            current = current->next;
-        }
-
+        current->entry.accountRecord.balance -= termData.transAmount;
 
     } else {
         printf("Transaction declined: ");
@@ -165,6 +164,8 @@ void makePayment(void) {
         }
     }
 }
+
+
 /*
  * Allows editing of account information based on the PAN entered by the user.
  * Updates both the linked list and the account file with new values.
